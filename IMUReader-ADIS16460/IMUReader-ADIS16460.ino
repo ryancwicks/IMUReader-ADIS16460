@@ -20,12 +20,16 @@ enum PIN_DEFS : uint8_t
 struct IMUData
 {
   unsigned long cap_time;
+  int16_t diag_stat;
   int16_t gyro_x;
   int16_t gyro_y;
   int16_t gyro_z;
   int16_t acc_x;
   int16_t acc_y;
   int16_t acc_z;
+  int16_t temp_out;
+  int16_t smpl_cntr;
+  int16_t checksum;
 };
 
 //Globals
@@ -37,6 +41,7 @@ SPISettings settings(900000, MSBFIRST, SPI_MODE3);
 //Function Definitions
 void DataReady ();
 void ReadIMU ( );
+bool ChecksumGood( volatile IMUData &  to_check );
 
 void setup() {
   // Set up pin modes
@@ -71,20 +76,22 @@ void loop() {
   {
     dataReadyFlag = false;
     ReadIMU ();
-    Serial.print ( data.cap_time );
-    Serial.print ( "," );
-    Serial.print ( data.gyro_x );
-    Serial.print ( "," );
-    Serial.print ( data.gyro_y );
-    Serial.print ( "," );
-    Serial.print ( data.gyro_z );
-    Serial.print ( "," );
-    Serial.print ( data.acc_x );
-    Serial.print ( "," );
-    Serial.print ( data.acc_y );
-    Serial.print ( "," );
-    Serial.println (data.acc_z );
-    
+    if ( ChecksumGood ( data ) )
+    {
+      Serial.print ( data.cap_time );
+      Serial.print ( "," );
+      Serial.print ( data.gyro_x );
+      Serial.print ( "," );
+      Serial.print ( data.gyro_y );
+      Serial.print ( "," );
+      Serial.print ( data.gyro_z );
+      Serial.print ( "," );
+      Serial.print ( data.acc_x );
+      Serial.print ( "," );
+      Serial.print ( data.acc_y );
+      Serial.print ( "," );
+      Serial.println (data.acc_z );
+    }
   }
 
 }
@@ -103,18 +110,43 @@ void ReadIMU (  )
   //Initiate Bulk Transfer
   SPI.transfer16 ( 0x3E00 );
 
-  int16_t diag = SPI.transfer16(0);
+  data.diag_stat = SPI.transfer16(0);
   data.gyro_x = SPI.transfer16(0);
   data.gyro_y = SPI.transfer16(0);
   data.gyro_z = SPI.transfer16(0);
   data.acc_x = SPI.transfer16(0);
   data.acc_y = SPI.transfer16(0);
   data.acc_z = SPI.transfer16(0);
-  int16_t temp = SPI.transfer16(0);
-  int16_t smp_ctrl = SPI.transfer16(0);
-  int16_t checksum = SPI.transfer16(0);
+  data.temp_out = SPI.transfer16(0);
+  data.smpl_cntr = SPI.transfer16(0);
+  data.checksum = SPI.transfer16(0);
 
   digitalWrite (CS, HIGH);
   SPI.endTransaction ();
+}
+
+bool ChecksumGood( volatile IMUData &  to_check )
+{
+
+  auto sum16 = []( int16_t value ) 
+  { 
+    uint16_t top ( *(reinterpret_cast <uint8_t * >( &value )) );
+    uint16_t bot ( *(reinterpret_cast <uint8_t * >( &value )+1) );
+    return top+bot;
+  };
+
+  int16_t checksum {0};
+
+  checksum += sum16 ( to_check.diag_stat );
+  checksum += sum16 ( to_check.gyro_x );
+  checksum += sum16 ( to_check.gyro_y );
+  checksum += sum16 ( to_check.gyro_z );
+  checksum += sum16 ( to_check.acc_x );
+  checksum += sum16 ( to_check.acc_y );
+  checksum += sum16 ( to_check.acc_z );
+  checksum += sum16 ( to_check.temp_out );
+  checksum += sum16 ( to_check.smpl_cntr );
+  
+  return checksum == to_check.checksum;
 }
 
