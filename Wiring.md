@@ -3,8 +3,11 @@
 ## Links (working as of 30 November 2017)
 
 [ADIS16460 Website](http://www.analog.com/en/products/mems/inertial-measurement-units/adis16460.html)
+
 [ADIS16460 Datasheet](http://www.analog.com/media/en/technical-documentation/data-sheets/ADIS16460.pdf)
+
 [ADIS16460 Breakout Board](https://wiki.analog.com/resources/eval/user-guides/inertial-mems/imu/adis16imu4-pcb)
+
 [Teensy 3.2](https://www.pjrc.com/store/teensy32.html)
 
 ## Teensy Layout
