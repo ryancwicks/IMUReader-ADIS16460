@@ -24,7 +24,7 @@
 
 ## Connection Table 
 
-| Teensy Pin | ADIS16460 Pin | ADIS16460 Breakout |
+| Teensy Pin <br> (Solder Direct) | ADIS16460 <br> (2x7 socket, 1mm spacing)  | ADIS16460 Breakout <br>(2×8 socket, 2mm spacing)|
 | ---------- | ------------- | ------------------ |
 | 10 (CS)    | 6 (SS_B)      | 3  |
 | 13 (SCK)   | 3 (SCK)       | 2  |
